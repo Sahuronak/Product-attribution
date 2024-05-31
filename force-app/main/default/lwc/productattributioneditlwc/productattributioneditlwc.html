@@ -1,0 +1,425 @@
+<template>
+    <template if:true={loader}>
+		<lightning-spinner alternative-text="Loading..." size="small"></lightning-spinner>
+	</template>
+    <c-custom-toast-message-component auto-close-time="8000"></c-custom-toast-message-component> 
+    <template if:true={showModal}>
+        <!-- Modal/Popup Box LWC starts here -->
+        <section role="dialog" tabindex="-1" aria-labelledby="modal-heading-01" aria-modal="true" aria-describedby="modal-content-id-1" class="slds-modal slds-fade-in-open">
+            <div class="slds-modal__container">
+                <!-- Modal/Popup Box LWC header here -->
+                <header class="slds-modal__header">
+                    <button class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse" title="Close" onclick={closeModal}>
+                        <lightning-icon icon-name="utility:close"
+                            alternative-text="close"
+                            variant="inverse"
+                            size="small" ></lightning-icon>
+                        <span class="slds-assistive-text">Close</span>
+                    </button>
+                    <h2 id="modal-heading-01" class="slds-text-heading_medium slds-hyphenate">Save Records</h2>
+                </header>
+                <!-- Modal/Popup Box LWC body starts here -->
+                <div class="slds-modal__content slds-p-around_medium" id="modal-content-id-1">
+                    <p>Are you sure to save the record? If you click on YES only the selected SKU rows will get saved!</p>
+                </div>
+                <!-- Modal/Popup Box LWC footer starts here -->
+                <footer class="slds-modal__footer">
+                    <button class="slds-button slds-button_neutral" onclick={closeModal} title="No">No</button>
+                    <button class="slds-button slds-button_brand" onclick={handleSaveValidation} title="Yes">Yes</button>
+                </footer>
+            </div>
+        </section>
+        <div class="slds-backdrop slds-backdrop_open"></div>
+    </template>
+    <template if:true={showModalPopup}>
+        <!-- Modal/Popup Box LWC starts here -->
+        <section role="dialog" tabindex="-1" aria-labelledby="modal-heading-01" aria-modal="true" aria-describedby="modal-content-id-1" class="slds-modal slds-fade-in-open">
+            <div class="slds-modal__container">
+                <!-- Modal/Popup Box LWC header here -->
+                <header class="slds-modal__header">
+                    <button class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse" title="Close" onclick={closeModalPrevious}>
+                        <lightning-icon icon-name="utility:close"
+                            alternative-text="close"
+                            variant="inverse"
+                            size="small" ></lightning-icon>
+                        <span class="slds-assistive-text">Close</span>
+                    </button>
+                    <h2 id="modal-heading-02" class="slds-text-heading_medium slds-hyphenate">Previous Page</h2>
+                </header>
+                <!-- Modal/Popup Box LWC body starts here -->
+                <div class="slds-modal__content slds-p-around_medium" id="modal-content-id-2">
+                    <p>Do you want to exit the current page? If you click YES the data entered would not get saved!</p>
+                </div>
+                <!-- Modal/Popup Box LWC footer starts here -->
+                <footer class="slds-modal__footer">
+                    <button class="slds-button slds-button_neutral" onclick={closeModalPrevious} title="No">No</button>
+                    <button class="slds-button slds-button_brand" onclick={handleMainPage} title="Yes">Yes</button>
+                </footer>
+            </div>
+        </section>
+        <div class="slds-backdrop slds-backdrop_open"></div>
+    </template> 
+    <lightning-layout multiple-rows="true" vertical-align="end">
+        <lightning-layout-item size="3"  padding="around-small">
+            <c-productattributionlookuplwc obj-name="Product__c" search-placeholder="Search SKU Code" icon-name="standard:account" onvaluecheck={handleSkuSelection}  onlookupselected={handleSkuSelection} filter="Attribution_Status__c IN ('Completed', 'Updated')"></c-productattributionlookuplwc> 
+        </lightning-layout-item> 
+        <lightning-layout-item size="4"  padding="around-small">
+            <lightning-button class="slds-p-right_small"  title="search" label="Search" variant="brand-outline" disabled={isSkuCodeSearchDisabled} onclick={handleSearchskucode}>
+            </lightning-button>
+        </lightning-layout-item>
+        <lightning-layout-item padding="around-small">
+            <lightning-button label="Select All" onclick={SelectedAllHandler} disabled={SelectedAll}></lightning-button>
+        </lightning-layout-item>
+        <lightning-layout-item padding="around-small">
+            <lightning-button label="Deselect All" onclick={UnSelectedAllHandler} disabled={UnSelectedAll}></lightning-button>
+        </lightning-layout-item> 
+        <lightning-layout-item padding="around-small">
+            <lightning-button label="Edit"  disabled={isEditSaveButtonDisabled} onclick={handleEdit}></lightning-button>
+        </lightning-layout-item>
+        <lightning-layout-item padding="around-small">
+            <lightning-button class="slds-p-left_xx-small" variant="brand" label="Save"  disabled={isEditSaveButtonDisabled} onclick={openModal}></lightning-button>
+        </lightning-layout-item>   
+        <lightning-layout-item padding="around-small">
+            <lightning-button class="slds-p-left_xx-small"  title="MainPage" label="Back" variant="brand-outline" onclick={openModalPrevious}></lightning-button>
+        </lightning-layout-item>              
+    </lightning-layout> 
+   
+    <div  class="slds-scrollable" style="height:80vh;width: 95vw;margin-top:10px;overflow: auto;">
+        <table class="slds-table slds-table_cell-buffer slds-table_bordered slds-table_col-bordered">
+          <thead class="sticky-header">
+              <tr>
+                  <th class="" scope="col">
+                      <div class="slds-truncate" title="Filled">Filled</div>
+                  </th>
+                  <th class="" scope="col">
+                      <div class="slds-truncate" title="SKU Code" style="width:250px">SKU Code</div>
+                  </th>
+                  <th class="" scope="col">
+                      <div class="slds-truncate" title="Weight in G">Weight in G</div>
+                  </th>
+                  <th class="" scope="col">
+                    <div class="slds-truncate" title="Border Matching">Border Matching</div>
+                  </th>  
+                  <th class="" scope="col">
+                      <div class="slds-truncate" title="Blouse Type">Blouse Type</div>
+                  </th>  
+                  <th class="" scope="col">
+                      <div class="slds-truncate" title="Body Patterns">Body Patterns</div>
+                  </th>
+                  <th class="" scope="col">
+                      <div class="slds-truncate" title="Body Design Element">Body Design Element</div>
+                  </th> 
+                  <th class="" scope="col">
+                      <div class="slds-truncate" title="Border Type">Border Type</div>
+                  </th>  
+                  <th class="" scope="col">
+                      <div class="slds-truncate" title="BLOUSE COLOR">BLOUSE COLOR</div>
+                  </th>
+                  <th class="" scope="col">
+                      <div class="slds-truncate" title="BORDER COLOR">BORDER COLOR</div>
+                  </th>  
+                  <th class="" scope="col">
+                      <div class="slds-truncate" title="Pattern Type">Pattern Type</div>
+                  </th> 
+                  <th class="" scope="col">
+                      <div class="slds-truncate" title="Buta Size">Buta Size</div>
+                  </th>   
+                  <th class="" scope="col">
+                      <div class="slds-truncate" title="Border Technique">Border Technique</div>
+                  </th>    
+                  <th class="" scope="col">
+                      <div class="slds-truncate" title="Border Dim in inch">Border Dim in inch</div>
+                  </th>   
+                  <th class="" scope="col">
+                      <div class="slds-truncate" title="Border Material">Border Material</div>
+                  </th>      
+                  <th class="" scope="col">
+                      <div class="slds-truncate" title="Pallu Matching">Pallu Matching</div>
+                  </th>   
+                  <th class="" scope="col">
+                      <div class="slds-truncate" title="Pallu Type">Pallu Type</div>
+                  </th>
+                  <th class="" scope="col">
+                      <div class="slds-truncate" title="Blouse Design Element">Blouse Design Element</div>
+                  </th>
+                  <th class="" scope="col">
+                      <div class="slds-truncate" title="Koniya">Koniya</div>
+                  </th>
+                  <th class="" scope="col">
+                      <div class="slds-truncate" title="Tasseling">Tasseling</div>
+                  </th>
+                  <th class="" scope="col">
+                      <div class="slds-truncate" title="Piping">Piping</div>
+                  </th> 
+                  <th class="" scope="col">
+                      <div class="slds-truncate" title="Fall & Pico">Fall Pico</div>
+                  </th>   
+                  <th class="" scope="col">
+                      <div class="slds-truncate" title="Weave & Fabric">Weave Fabric</div>
+                  </th>   
+                  <th class="" scope="col">
+                      <div class="slds-truncate" title="Color Type">Color Type</div>
+                  </th>  
+                  <th class="" scope="col">
+                      <div class="slds-truncate" title="Silk Mark">Silk Mark</div>
+                  </th>   
+                  <th class="" scope="col">
+                      <div class="slds-truncate" title="GI Tag">GI Tag</div>
+                  </th>   
+                  <th class="" scope="col">
+                      <div class="slds-truncate" title="Zari Certificate">Zari Certificate</div>
+                  </th> 
+                  <th class="" scope="col">
+                  <div class="slds-truncate" title="Craft Mark">Craft Mark</div>
+              </th>   
+              <th class="" scope="col">
+                  <div class="slds-truncate" title="Transparency">Transparency</div>
+              </th>   
+              <th class="" scope="col">
+                  <div class="slds-truncate" title="Breathability">Breathability</div>
+              </th>   
+              <th class="" scope="col">
+                  <div class="slds-truncate" title="Drapability">Drapability</div>
+              </th>   
+              <th class="" scope="col">
+                  <div class="slds-truncate" title="Washcare">Washcare</div>
+              </th>   
+              <th class="" scope="col">
+                  <div class="slds-truncate" title="Saree Length in Meter">Saree Length in Meter</div>
+              </th>   
+              <th class="" scope="col">
+                  <div class="slds-truncate" title="Saree Width in Meter">Saree Width in Meter</div>
+              </th>   
+              <th class="" scope="col">
+                  <div class="slds-truncate" title="Blouse Length in CM">Blouse Length in CM</div>
+              </th>   
+              </tr>
+          </thead>
+          <tbody>
+              <template if:true={isDisplayTable}>
+                  <template for:each={SkucodeSearchRowData} for:item="item" for:index="index">
+                      <tr key={item}>
+                          <td style="text-align: center;">
+                              <lightning-input name="filled" type="checkbox" disabled={isTableDisabled} data-index={index} onchange={changeHandler} checked={item.filled}></lightning-input>
+                          </td>
+                          <td style="text-align: center;">
+                            {item.skucodename}
+                          </td>
+                          <td>
+                              <lightning-input type="number" name="weightInG" value={item.weightInG} data-index={index} disabled={isTableDisabled} onchange={changeHandler}></lightning-input>
+                          </td>
+                          <td>
+                              <lightning-combobox name="borderMatching"  value={item.borderMatching}
+                                      options={BorderMatchingOptions} data-index={index} disabled={isTableDisabled} onchange={changeHandler}>
+                                  </lightning-combobox>
+                          </td>
+                          <td>
+                              <lightning-combobox name="blouseType"  value={item.blouseType}
+                                      options={BlouseTypeOptions} data-index={index} disabled={isTableDisabled} onchange={changeHandler}>
+                                  </lightning-combobox>
+                          </td>
+                          <td>
+                            <lightning-combobox name="bodyPatterns"  value={item.bodyPatterns} 
+                                options={BodyPatternUpdateOptions} data-index={index} disabled={isTableDisabled} onchange={changeHandler}>
+                            </lightning-combobox>   
+                          </td>
+                          <td>     
+                            <lightning-combobox name="bodyDesignElement"  value={item.bodyDesignElement} 
+                                    options={item.BodyDesignElementOptions} data-index={index} disabled={isTableDisabled} onchange={changeHandler}>
+                            </lightning-combobox>                          
+                          </td>
+                          <td>
+                              <template if:true={BorderTypeValues.data}>
+                                  <lightning-combobox name="borderType"  value={item.borderType}
+                                      options={BorderTypeValues.data.values} data-index={index} disabled={isTableDisabled} onchange={changeHandler}>
+                                  </lightning-combobox>
+                              </template>
+                          </td>
+                          <td>
+                            <lightning-combobox name="blouseColor"  value={item.blouseColor}
+                                    options={item.BlouseColorOptions} data-index={index} disabled={isTableDisabled} onchange={changeHandler}>
+                                </lightning-combobox>
+                          </td>
+                          <td>
+                            <lightning-combobox name="borderColor"  value={item.borderColor}
+                                    options={item.BorderColorOptions} data-index={index} disabled={isTableDisabled} onchange={changeHandler}>
+                                </lightning-combobox>  
+                          </td>
+                          <td>  
+                            <lightning-combobox name="patternType"  value={item.patternType} 
+                                options={item.patternTypeOptions} data-index={index} disabled={isTableDisabled} onchange={changeHandler}>
+                            </lightning-combobox>                            
+                          </td>
+                          <td>    
+                            <lightning-combobox name="butaSize"  value={item.butaSize} 
+                                    options={item.ButaSizeOptions} data-index={index} disabled={isTableDisabled} onchange={changeHandler}>
+                            </lightning-combobox>                          
+                          </td>
+                          <td>
+                              <template if:true={BorderTechniqueValues.data}>
+                                  <lightning-combobox name="borderTechnique"  value={item.borderTechnique} 
+                                      options={BorderTechniqueValues.data.values} data-index={index} disabled={isTableDisabled} onchange={changeHandler}>
+                                  </lightning-combobox>
+                              </template>
+                          </td>
+                          <td>
+                            <template if:true={BorderDimValues.data}>
+                                <lightning-combobox name="borderDimInInch"  value={item.borderDimInInch} 
+                                    options={BorderDimValues.data.values} data-index={index} disabled={isTableDisabled} onchange={changeHandler}>
+                                </lightning-combobox>
+                            </template>                              
+                          </td>
+                          <td>
+                              <template if:true={BorderMaterialValues.data}>
+                                  <lightning-combobox name="borderMaterial"  value={item.borderMaterial}
+                                      options={BorderMaterialValues.data.values} data-index={index} disabled={isTableDisabled} onchange={changeHandler}>
+                                  </lightning-combobox>
+                              </template>
+                          </td>
+                          <td>
+                              <template if:true={PalluMatchingValues.data}>
+                                  <lightning-combobox name="palluMatching"  value={item.palluMatching}
+                                      options={PalluMatchingValues.data.values} data-index={index} disabled={isTableDisabled} onchange={changeHandler}>
+                                  </lightning-combobox>
+                              </template>
+                          </td>
+                          <td>
+                              <template if:true={PalluTypeValues.data}>
+                                  <lightning-combobox name="palluType"  value={item.palluType}
+                                      options={PalluTypeValues.data.values} data-index={index} disabled={isTableDisabled} onchange={changeHandler}>
+                                  </lightning-combobox>
+                              </template>
+                          </td>
+                          <td>
+                              <template if:true={BlouseDesignElementValues.data}>
+                                  <lightning-combobox name="blouseDesignElement"  value={item.blouseDesignElement}
+                                      options={BlouseDesignElementValues.data.values} data-index={index} disabled={isTableDisabled} onchange={changeHandler}>
+                                  </lightning-combobox>
+                              </template>
+                          </td>
+                          <td>
+                              <template if:true={KoniyaValues.data}>
+                                  <lightning-combobox name="koniya"  value={item.koniya}
+                                      options={KoniyaValues.data.values} data-index={index} disabled={isTableDisabled} onchange={changeHandler}>
+                                  </lightning-combobox>
+                              </template>
+                          </td>
+                          <td>
+                              <template if:true={TasselingValues.data}>
+                                  <lightning-combobox name="tasseling"  value={item.tasseling}
+                                      options={TasselingValues.data.values} data-index={index} disabled={isTableDisabled} onchange={changeHandler}>
+                                  </lightning-combobox>
+                              </template>
+                          </td>
+                          <td>
+                              <template if:true={PipingValues.data}>
+                                  <lightning-combobox name="piping"  value={item.piping}
+                                      options={PipingValues.data.values} data-index={index} disabled={isTableDisabled} onchange={changeHandler}>
+                                  </lightning-combobox>
+                              </template>
+                          </td>
+                          <td>
+                              <template if:true={FallPicoValues.data}>
+                                  <lightning-combobox name="fallPico"  value={item.fallPico}
+                                      options={FallPicoValues.data.values} data-index={index} disabled={isTableDisabled} onchange={changeHandler}>
+                                  </lightning-combobox>
+                              </template>
+                          </td>
+                          <td>
+                              <template if:true={WeaveFabricValues.data}>
+                                  <lightning-combobox name="weaveFabric"  value={item.weaveFabric}
+                                      options={WeaveFabricValues.data.values} data-index={index} disabled={isTableDisabled} onchange={changeHandler}>
+                                  </lightning-combobox>
+                              </template>
+                          </td>
+                          <td>
+                              <template if:true={ColorTypeValues.data}>
+                                  <lightning-combobox name="colorType"  value={item.colorType}
+                                      options={ColorTypeValues.data.values} data-index={index} disabled={isTableDisabled} onchange={changeHandler}>
+                                  </lightning-combobox>
+                              </template>
+                          </td>
+                          <td>
+                              <template if:true={SilkMarkValues.data}>
+                                  <lightning-combobox name="silkMark"  value={item.silkMark}
+                                      options={SilkMarkValues.data.values} data-index={index} disabled={isTableDisabled} onchange={changeHandler}>
+                                  </lightning-combobox>
+                              </template>
+                          </td>
+                          <td>
+                              <template if:true={GITagValues.data}>
+                                  <lightning-combobox name="gITag"  value={item.gITag}
+                                      options={GITagValues.data.values} data-index={index} disabled={isTableDisabled} onchange={changeHandler}>
+                                  </lightning-combobox>
+                              </template>
+                          </td>
+                          <td>
+                              <template if:true={ZariCertificateValues.data}>
+                                  <lightning-combobox name="zariCertificate"  value={item.zariCertificate}
+                                      options={ZariCertificateValues.data.values} data-index={index} disabled={isTableDisabled} onchange={changeHandler}>
+                                  </lightning-combobox>
+                              </template>
+                          </td>
+                          <td>
+                              <template if:true={CraftMarkValues.data}>
+                                  <lightning-combobox name="craftMark"  value={item.craftMark}
+                                      options={CraftMarkValues.data.values} data-index={index} disabled={isTableDisabled} onchange={changeHandler}>
+                                  </lightning-combobox>
+                              </template>
+                          </td>
+                          <td>
+                              <template if:true={TransparencyValues.data}>
+                                  <lightning-combobox name="transparency"  value={item.transparency}
+                                      options={TransparencyValues.data.values} data-index={index} disabled={isTableDisabled} onchange={changeHandler}>
+                                  </lightning-combobox>
+                              </template>
+                          </td>
+                          <td>
+                              <template if:true={BreathabilityValues.data}>
+                                  <lightning-combobox name="breathability"  value={item.breathability}
+                                      options={BreathabilityValues.data.values} data-index={index} disabled={isTableDisabled} onchange={changeHandler}>
+                                  </lightning-combobox>
+                              </template>
+                          </td>
+                          <td>
+                              <template if:true={DrapabilityValues.data}>
+                                  <lightning-combobox name="drapability"  value={item.drapability}
+                                      options={DrapabilityValues.data.values} data-index={index} disabled={isTableDisabled} onchange={changeHandler}>
+                                  </lightning-combobox>
+                              </template>
+                          </td>
+                          <td>
+                            <template if:true={WashcareValues.data}>
+                                <lightning-combobox name="Washcare"  value={item.washcare}
+                                    options={WashcareValues.data.values} data-index={index} disabled={isTableDisabled} onchange={changeHandler}>
+                                </lightning-combobox>
+                            </template>  
+                          </td>
+                          <td>
+                            <template if:true={SareeLengthinMeterValues.data}>
+                                <lightning-combobox name="sareeLengthinMeter"  value={item.sareeLengthinMeter}
+                                    options={SareeLengthinMeterValues.data.values} data-index={index} disabled={isTableDisabled} onchange={changeHandler}>
+                                </lightning-combobox>
+                            </template>
+                        </td>
+                        <td>
+                            <template if:true={SareeWidthinMeterValues.data}>
+                                <lightning-combobox name="sareeWidthinMeter"  value={item.sareeWidthinMeter}
+                                    options={SareeWidthinMeterValues.data.values} data-index={index} disabled={isTableDisabled} onchange={changeHandler}>
+                                </lightning-combobox>
+                            </template>
+                        </td>
+                        <td>
+                            <template if:true={BlouseLengthinCMValues.data}>
+                                <lightning-combobox name="blouseLengthinCM"  value={item.blouseLengthinCM}
+                                    options={BlouseLengthinCMValues.data.values} data-index={index} disabled={isTableDisabled} onchange={changeHandler}>
+                                </lightning-combobox>
+                            </template>
+                        </td>
+                      </tr> 
+                  </template>
+              </template>
+          </tbody>
+        </table>
+      </div>
+</template>

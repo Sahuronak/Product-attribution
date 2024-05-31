@@ -1,0 +1,106 @@
+<template>
+    <template if:true={FetchSkuVariable}>
+        <c-productattributionvendorskucomponent vender-id={venderId} onvendorpage={handleVendorPage}></c-productattributionvendorskucomponent>
+    </template>
+    <template if:true={showModalPopup}>
+        <!-- Modal/Popup Box LWC starts here -->
+        <section role="dialog" tabindex="-1" aria-labelledby="modal-heading-01" aria-modal="true" aria-describedby="modal-content-id-1" class="slds-modal slds-fade-in-open">
+            <div class="slds-modal__container">
+                <!-- Modal/Popup Box LWC header here -->
+                <header class="slds-modal__header">
+                    <button class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse" title="Close" onclick={closeModalPrevious}>
+                        <lightning-icon icon-name="utility:close"
+                            alternative-text="close"
+                            variant="inverse"
+                            size="small" ></lightning-icon>
+                        <span class="slds-assistive-text">Close</span>
+                    </button>
+                    <h2 id="modal-heading-02" class="slds-text-heading_medium slds-hyphenate">Previous Page</h2>
+                </header>
+                <!-- Modal/Popup Box LWC body starts here -->
+                <div class="slds-modal__content slds-p-around_medium" id="modal-content-id-2">
+                    <p>Do you want to exit the current page? If you click YES the data entered would not get saved!</p>
+                </div>
+                <!-- Modal/Popup Box LWC footer starts here -->
+                <footer class="slds-modal__footer">
+                    <button class="slds-button slds-button_neutral" onclick={closeModalPrevious} title="No">No</button>
+                    <button class="slds-button slds-button_brand" onclick={handleMainPage} title="Yes">Yes</button>
+                </footer>
+            </div>
+        </section>
+        <div class="slds-backdrop slds-backdrop_open"></div>
+    </template> 
+    <template if:true={loader}>
+		<lightning-spinner alternative-text="Loading..." size="small"></lightning-spinner>
+	</template>
+    <template if:false={FetchSkuVariable}>
+    <c-custom-toast-message-component auto-close-time="8000"></c-custom-toast-message-component>  
+    <lightning-layout multiple-rows="true" vertical-align="end">
+        <lightning-layout-item flexibility="auto" padding="horizontal-small" class="slds-text-align_left"> 
+            <lightning-input type="text" label="Search Vendor Name" placeholder="Type Vendor Name... " value={VendorNamesearchKey} onchange={handleSearchChange}>
+            </lightning-input>
+        </lightning-layout-item>
+        <lightning-layout-item flexibility="auto" padding="horizontal-small" class="slds-text-align_left">
+            <lightning-button class="slds-p-right_small"  title="search" label="Search" variant="brand-outline"  onclick={handleSearchVendorName}>
+            </lightning-button>
+        </lightning-layout-item>
+        <lightning-layout-item size="7" flexibility="auto" padding="horizontal-small" class="slds-text-align_right">
+            <lightning-button class="slds-float_right"  title="Main Page" label="Back" variant="brand-outline" onclick={openModalPrevious}>
+            </lightning-button>
+        </lightning-layout-item>  
+        <lightning-layout-item size="2" flexibility="auto" padding="horizontal-small" class="slds-text-align_right">
+            <lightning-button class="slds-float_right"  title="Download Summary" label="Download Summary" variant="brand-outline" onclick={handleDownloadSummary}>
+            </lightning-button>
+        </lightning-layout-item>              
+    </lightning-layout>
+    <lightning-layout class="slds-align_absolute-center">
+        <lightning-layout-item style="text-align: center;">
+            <lightning-button label="Previous" onclick={previousHandler} disabled={disablePrevious}></lightning-button>
+        </lightning-layout-item>
+        <lightning-layout-item size="1">
+            <p style="text-align: center;">Page {currentPage} of {totalPage}</p>
+        </lightning-layout-item>
+        <lightning-layout-item>
+            <lightning-button label="Next" onclick={nextHandler} disabled={disableNext}></lightning-button>
+        </lightning-layout-item>
+    </lightning-layout>
+    <div  class="slds-scrollable" style="height:70vh;width: 95vw;margin-top:10px;overflow: auto;">
+        <table class="slds-table slds-table_cell-buffer slds-table_bordered slds-table_col-bordered">
+            <thead class="sticky-header">
+              <tr>
+                <th class="" scope="col">
+                    <div class="slds-truncate" title="Vendor Name">Vendor Name</div>
+                </th>
+                <th class="" scope="col">
+                    <div class="slds-truncate" title="Vendor Code">Vendor Code</div>
+                </th>
+                <th class="" scope="col">
+                    <div class="slds-truncate" title="Total SKUs">Total SKUs</div>
+                </th>
+                <th class="" scope="col">
+                    <div class="slds-truncate" title="Attribution Completed">Attribution Completed</div>
+                </th>
+                <th class="" scope="col">
+                    <div class="slds-truncate" title="Attribution pending">Attribution pending</div>
+                </th>                  
+              </tr>
+            </thead>        
+            <tbody>
+                <template if:true={isDisplayTable}>
+                    <template for:each={filteredVendorData} for:item="vendor" for:index="index">
+                        <tr key={vendor}>
+                            <td style="text-align: center;" data-id={vendor.Id} data-index={index}>
+                                <a onclick={handleVendorNameClick} data-id={vendor.Id} data-index={index}>{vendor.Name}</a>
+                            </td>
+                            <td class="slds-p-around_x-small" data-index={index}>{vendor.Vendor_Code__c}</td>
+                            <td>{vendor.Total_SKU__c}</td>
+                            <td>{vendor.Total_Completed_SKU__c}</td>
+                            <td>{vendor.Total_Pending_SKU__c}</td>
+                        </tr>  
+                </template>
+                </template>
+            </tbody>
+        </table>
+    </div>
+    </template>
+</template>

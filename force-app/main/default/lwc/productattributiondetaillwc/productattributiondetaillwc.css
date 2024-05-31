@@ -1,0 +1,4 @@
+.slds-modal__footer {
+    width: 100%; /* Make sure the footer spans the whole width */
+    padding: 0; /* Remove any default padding */
+}
